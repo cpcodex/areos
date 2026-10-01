@@ -1,0 +1,17 @@
+{
+  "name": "x-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Electron wrapper for https://x.com",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:nosandbox": "electron . --no-sandbox"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^44.5.1"
+  }
+}

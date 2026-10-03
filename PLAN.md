@@ -81,3 +81,80 @@ Verify: `git status --short` prints nothing and `git log --oneline` shows the co
 3. Close and reopen with `npm run start:nosandbox`; still logged in.
 4. Click an external link in a post; it opens in the default browser.
 5. Launch a second time while running; the existing window is focused.
+
+# PLAN: Rename to Areos (open-source identity)
+
+Context: the app still loads https://x.com. Only our own name changes.
+Display name is Areos. npm package name is areos (npm names are lowercase).
+Electron stores the session under ~/.config/<package name>, so this move
+drops the old login at ~/.config/x-desktop. Log in again after T6.
+
+## T6 - App identity [x]
+Goal: package, window title, and session partition say Areos, not X.
+Files: package.json, package-lock.json, main.js
+Do:
+- package.json: name "areos", description
+  "Desktop window for https://x.com", license "MIT". Leave private true
+  (this is a GitHub project, not an npm publish).
+- package-lock.json: top-level name "areos" (both the root and packages[""]).
+- main.js: BrowserWindow title "Areos". On page-title-updated, call
+  event.preventDefault() so the site title does not replace it.
+- main.js: partition "persist:areos".
+Acceptance: no "x-desktop", title "X", or "persist:x" left in these files.
+Window title stays Areos. App still launches.
+Verify: `timeout 15 npm run start:nosandbox; echo "exit: $?"` (124 = pass).
+
+## T7 - Docs and license [x]
+Goal: README, AGENTS, and a real MIT license match the Areos name.
+Files: README.md, AGENTS.md, LICENSE
+Do:
+- AGENTS.md heading: Areos. Keep the Ubuntu sandbox notes.
+- README: title "Areos", desktop file path
+  ~/.local/share/applications/areos.desktop, Name=Areos, session path
+  ~/.config/areos/Partitions/areos/ (no hardcoded /home/cpcodex).
+  Keep the unofficial / trademark disclaimer. Clone URL stays a placeholder.
+- Add a LICENSE file with the standard MIT text, copyright year 2026,
+  copyright holder "Areos contributors".
+Acceptance: README desktop and session instructions use Areos. LICENSE
+exists. AGENTS.md heading is Areos.
+Verify: `test -f LICENSE && grep -n Areos README.md AGENTS.md`
+
+# PLAN: Spellcheck and desktop notifications
+
+Context: Linux has no phone-style autocorrect. Ship Chromium spellcheck
+(red underline, right-click a suggestion). x.com already creates
+notifications; this app must let them through to the desktop. They only
+arrive while Areos is running, because the app quits when the window closes.
+
+## T8 - Spellcheck [x]
+Goal: misspelled words in the x.com composer are underlined, and a
+right-click replaces them.
+Files: main.js
+Do:
+- Import Menu and MenuItem from electron.
+- On the window session (partition persist:areos), call
+  setSpellCheckerLanguages(['en-US']).
+- On webContents 'context-menu': if params.misspelledWord is empty, return
+  without showing a menu (x.com keeps its own menus). Otherwise
+  event.preventDefault() and pop up a menu of params.dictionarySuggestions.
+  Each item calls webContents.replaceMisspelling(suggestion). If there is a
+  misspelled word, also add "Add to dictionary", which calls
+  session.addWordToSpellCheckerDictionary(params.misspelledWord).
+Acceptance: main.js sets the en-US spellcheck language and only opens that
+menu for a misspelled word. App still launches.
+Verify: `timeout 15 npm run start:nosandbox; echo "exit: $?"` (124 = pass).
+
+## T9 - Desktop notifications [x]
+Goal: x.com notifications show on the Ubuntu desktop while Areos is open.
+Files: main.js, README.md
+Do:
+- On the persist:areos session, set both setPermissionRequestHandler and
+  setPermissionCheckHandler. There is no default once a handler is set, so
+  answer every permission the same way in both: grant notifications,
+  fullscreen, pointerLock, clipboard-sanitized-write, media, and
+  mediaKeySystem. Deny the rest.
+- README Features: one line that desktop notifications appear while Areos
+  is running, and the app quits when the window closes.
+Acceptance: both handlers grant notifications. README mentions that.
+App still launches.
+Verify: `timeout 15 npm run start:nosandbox; echo "exit: $?"` (124 = pass).

@@ -143,18 +143,3 @@ Do:
 Acceptance: main.js sets the en-US spellcheck language and only opens that
 menu for a misspelled word. App still launches.
 Verify: `timeout 15 npm run start:nosandbox; echo "exit: $?"` (124 = pass).
-
-## T9 - Desktop notifications [x]
-Goal: x.com notifications show on the Ubuntu desktop while Areos is open.
-Files: main.js, README.md
-Do:
-- On the persist:areos session, set both setPermissionRequestHandler and
-  setPermissionCheckHandler. There is no default once a handler is set, so
-  answer every permission the same way in both: grant notifications,
-  fullscreen, pointerLock, clipboard-sanitized-write, media, and
-  mediaKeySystem. Deny the rest.
-- README Features: one line that desktop notifications appear while Areos
-  is running, and the app quits when the window closes.
-Acceptance: both handlers grant notifications. README mentions that.
-App still launches.
-Verify: `timeout 15 npm run start:nosandbox; echo "exit: $?"` (124 = pass).
